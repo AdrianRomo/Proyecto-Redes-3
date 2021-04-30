@@ -1,7 +1,10 @@
 # Repositorio con scripts importantes
 
-Scripts que se utilizaron y desarrollaron por Adrian González Pardo, a la hora de realizar el proyecto de Administración de Servicios en Red (ASR)
+## Colaboradores
+* Muñoz Primero Elias
+* Sanchez Nicolas
+* González Pardo Adrian
 
-Como nota importante las pruebas fuerón realizadas en un OS Linux, Fedora
+Scripts que se utilizaron y desarrollaron por el equipo La Pandilla Mantequilla, a la hora de realizar el proyecto de Administración de Servicios en Red (ASR)
 
-
+Como nota importante las pruebas fueron realizadas en un OS Linux, Fedora revisar pruebas o expresiones utilizadas para OS Windows
