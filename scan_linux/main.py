@@ -14,4 +14,4 @@ for i in range(len(interfaces)):
     print(f"{i+1}: {interfaces[i]}")
 read=int(input("Ingresa el numero de interfaz: "))-1
 # Modulo que permite escanear todos los datos
-scan_by_interface(interfaces[read],"admin","admin","1234")
+res = scan_by_interface(interfaces[read],"admin","admin","1234")

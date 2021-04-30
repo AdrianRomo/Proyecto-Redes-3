@@ -66,6 +66,7 @@ def scan_by_interface(interface_name="tap0",user="admin",password="admin",secret
     cmd=["sh ip int | i Internet address","sh ip int br | include up","sh run | include hostname"]
     c=0
     red={}
+    red_id={}
     net_router={}
     for i in ciscos:
         flag=False
@@ -91,9 +92,16 @@ def scan_by_interface(interface_name="tap0",user="admin",password="admin",secret
                 flag=True
             if flag:
                 iter={}
+                iter_s={}
                 for j in range(len(direcciones)):
                     iter[interf[(j*2)]]=direcciones[j]
+                    sub=direcciones[j].split("/")
+                    pr=sub[1]
+                    sub=list(map(int,sub[0].split(".")))
+                    sub=arr_to_ip(get_id_net(sub,create_masc_by_prefix(int(pr))))
+                    iter_s[f"{interf[(j*2)]}-sub"]=sub
                 red[host_cmd]=iter
+                red_id[host_cmd]=iter_s
             dir.clear()
             inte.clear()
             direcciones.clear()
@@ -109,19 +117,47 @@ def scan_by_interface(interface_name="tap0",user="admin",password="admin",secret
                             net=create_masc_by_prefix(int(red_e[1]))
                             id=get_id_net(list(map(int,red_e[0].split("."))),net)
                             br=get_broadcast_ip(id,net)
-                            ip=[id[0],id[1],id[2],id[3]+1]
-                            print(f"-------Scan Network:-------\n\tID: {arr_to_ip(id)}\n\tNetmask: {arr_to_ip(net)}\n\tBroadcast: {arr_to_ip(br)}")
-                            resp_r=scan_range(ip,br)
-                            responde=responde+resp_r
-                            # aca filtrar Equipos cisco
-                            for a in range(len(resp_r)):
-                                for b,d in resp_r[a].items():
-                                    if "Cisco_Router_IOS" in d:
-                                        ciscos.append(resp_r[a])
+                            if arr_to_ip(br)!=arr_to_ip(id):
+                                ip=[id[0],id[1],id[2],id[3]+1]
+                                print(f"-------Scan Network:-------\n\tID: {arr_to_ip(id)}\n\tNetmask: {arr_to_ip(net)}\n\tBroadcast: {arr_to_ip(br)}")
+                                resp_r=scan_range(ip,br)
+                                responde=responde+resp_r
+                                # aca filtrar Equipos cisco
+                                for a in range(len(resp_r)):
+                                    for b,d in resp_r[a].items():
+                                        if "Cisco_Router_IOS" in d:
+                                            ciscos.append(resp_r[a])
                     net_router[k]=v
                 red[k]={0:0}
     json_respond=json.dumps(responde,sort_keys=True,indent=4)
     json_routers=json.dumps(net_router,sort_keys=True,indent=4)
-    print(f"Host con respuesta:\n{json_respond}")
-    print(f"Diccionario de routers:\n{json_routers}")
-    return [json_respond,json_routers]
+    json_id=json.dumps(red_id,sort_keys=True,indent=4)
+    arr_conexiones=verifica_conectividad(red_id,responde)
+    print(f"Host con respuesta:\n{json_respond}\n"
+        f"Diccionario de routers:\n{json_routers}\n"
+        f"Identificadores de red de cada interfaz:\n{json_id}\n"
+        f"Interconexiones:\n{arr_conexiones}")
+
+    conexiones_r=[]
+    for k,v in net_router.items():
+        host_n={"hostname":k,"interfaces":[]}
+        inter=[]
+        for w,x in v.items():
+            b=red_id[k][f"{w}-sub"]
+            net=arr_to_ip(create_masc_by_prefix(int(x.split("/")[1])))
+            prefix=int(x.split("/")[1])
+            b=f"{b}/{prefix}"
+            a={"name":w,
+                "ip":x.split("/")[0],
+                "netmask":net,
+                "idnet":b}
+            inter.append(a)
+        host_n["interfaces"]=inter
+        conexiones_r.append(host_n)
+    json_conexiones=json.dumps(conexiones_r,sort_keys=True,indent=4)
+    print(f"Información general:\n{json_conexiones}")
+    # Posición 0 devuelve el json de todas las interfaces acomadado
+    # Posición 1 devuelve el arreglo de interconexiones que hay entre routers
+    # Posicion 2 devuelve todos los host que responsidieron al ping
+    return [conexiones_r, arr_conexiones, net_router, responde]
+    #return [json_conexiones,arr_conexiones,json_respond]
