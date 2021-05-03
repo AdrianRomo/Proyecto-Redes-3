@@ -76,7 +76,7 @@ def scan_by_interface(interface_name="tap0",user="admin",password="admin",secret
             cisco["ip"]=k
             output=conectar(cisco,cmd)
             dir=re.split("\n|  Internet address is | ",output[0])
-            inte=re.split("\n|      YES NVRAM  up                    up      |      YES manual up                    up  | ",output[1])
+            inte=re.split("\n|YES NVRAM  up                    up|YES manual up                    up| ",output[1])
             host_cmd=output[2].split("hostname ")[1]
             direcciones=[]
             interf=[]
